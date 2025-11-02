@@ -9,6 +9,7 @@ export const creatProject = async (req, res) => {
       description,
       name,
       status,
+      team_members,
       start_date,
       end_date,
       team_lead,
