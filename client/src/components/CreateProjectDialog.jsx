@@ -47,7 +47,7 @@ const CreateProjectDialog = ({ isDialogOpen, setIsDialogOpen }) => {
           },
         }
       );
-      dispatch(addProject(data.addProject));
+      dispatch(addProject(data.project));
       setIsDialogOpen(false);
     } catch (error) {
       toast.error(error?.response?.data?.message || error.message);
