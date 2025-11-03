@@ -114,19 +114,60 @@ const syncWorkspaceDeletion = inngest.createFunction(
   }
 );
 
-// Inngest Function to save workspace member data to database
+// Inngest Function to save workspace member data to database when membership is created
+const syncWorkspaceMemberCreation = inngest.createFunction(
+  { id: "sync-workspace-member-creation" },
+  { event: "clerk/organizationMembership.created" },
+  async ({ event }) => {
+    const { data } = event;
+    const userId = data.public_user_data?.user_id;
+    const organizationId = data.organization?.id;
+    const roleName = data.role || "org:member";
+
+    // Check if member already exists
+    const existingMember = await prisma.workspaceMember.findFirst({
+      where: {
+        userId: userId,
+        workspaceId: organizationId,
+      },
+    });
+
+    if (!existingMember) {
+      await prisma.workspaceMember.create({
+        data: {
+          userId: userId,
+          workspaceId: organizationId,
+          role: roleName === "org:admin" ? "ADMIN" : "MEMBER",
+        },
+      });
+    }
+  }
+);
+
+// Inngest Function to save workspace member data to database (legacy support)
 const syncWorkspaceMemberAddition = inngest.createFunction(
   { id: "sync-workspace-member-from-clerk" },
   { event: "clerk/organization_member.accepted" },
   async ({ event }) => {
     const { data } = event;
-    await prisma.workspaceMember.create({
-      data: {
+
+    // Check if member already exists
+    const existingMember = await prisma.workspaceMember.findFirst({
+      where: {
         userId: data.user_id,
         workspaceId: data.organization_id,
-        role: String(data.role_name).toUpperCase(),
       },
     });
+
+    if (!existingMember) {
+      await prisma.workspaceMember.create({
+        data: {
+          userId: data.user_id,
+          workspaceId: data.organization_id,
+          role: String(data.role_name).toUpperCase(),
+        },
+      });
+    }
   }
 );
 
@@ -234,5 +275,6 @@ export const functions = [
   syncWorkspaceUpdation,
   syncWorkspaceDeletion,
   syncWorkspaceMemberAddition,
+  syncWorkspaceMemberCreation,
   sendTaskAssignmentEmail,
 ];
