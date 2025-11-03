@@ -102,6 +102,7 @@ export const updateProject = async (req, res) => {
   try {
     const { userId } = await req.auth();
     const {
+      id,
       workspaceId,
       description,
       name,
