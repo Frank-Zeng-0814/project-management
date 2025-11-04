@@ -51,7 +51,7 @@ export const createTask = async (req, res) => {
             name: "app/task.assigned",
             data: {
                 taskId: task.id,
-                origin
+                origin: req.headers.origin || process.env.CLIENT_URL
             }
         })
 
